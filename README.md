@@ -4,7 +4,7 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 Needs to be run as part of [heroku-buildpack-multi](https://github.com/heroku/heroku-buildpack-multi), **after** [heroku-buildpack-php](https://github.com/heroku/heroku-buildpack-php).
 
-Installs libsodium 1.0.3 and libsodium 1.0.0 by default, this can be changed by adding a file named .sodium_params to the root of your project and adding following lines to it:
+Installs libsodium 1.0.3 and libsodium-php 1.0.0 by default, this can be changed by adding a file named .sodium_params to the root of your project and adding following lines to it:
 
 LIBSODIUM_VERSION=x.x.x
 
