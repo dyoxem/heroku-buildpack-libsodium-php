@@ -1,6 +1,6 @@
 # Heroku buildpack: libsodium-php
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for the `libsodium-php` extension, based on [heroku-buildpack-libsodium](https://github.com/envato/heroku-buildpack-libsodium).
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for the [libsodium-php](https://github.com/jedisct1/libsodium-php) extension, based on [heroku-buildpack-libsodium](https://github.com/envato/heroku-buildpack-libsodium).
 
 Needs to be run as part of [heroku-buildpack-multi](https://github.com/heroku/heroku-buildpack-multi), **after** [heroku-buildpack-php](https://github.com/heroku/heroku-buildpack-php).
 
