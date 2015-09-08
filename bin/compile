@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+set -e
+
+mkdir -p "$1" "$2"
+BUILD_PATH=$(cd "$1/" && pwd)
+CACHE_PATH=$(cd "$2/" && pwd)
+
+
+VERSION=1.0.3
+PHP_VERSION=1.0.0
+INSTALL_DIR=$HOME/.heroku/php/libsodium
+
+
+if [ -s $BUILD_PATH/.sodium_params ]; then
+  for PROPERTY in $(cat $BUILD_PATH/.sodium_params); do
+    if [[ $PROPERTY == LIBSODIUM_VERSION=* ]]; then
+      VERSION=${PROPERTY#LIBSODIUM_VERSION=}
+    fi
+    if [[ $PROPERTY == LIBSODIUM_PHP_VERSION=* ]]; then
+      PHP_VERSION=${PROPERTY#LIBSODIUM_PHP_VERSION=}
+    fi
+    if [[ $PROPERTY == LIBSODIUM_INSTALL_DIR=* ]]; then
+      INSTALL_DIR=${PROPERTY#LIBSODIUM_INSTALL_DIR=}
+    fi
+  done
+fi
+
+
+SODIUM_DIR=libsodium-$VERSION
+TARBALL=$SODIUM_DIR.tar.gz
+TARBALL_URL=https://download.libsodium.org/libsodium/releases/$TARBALL
+
+PHP_SODIUM_DIR=libsodium-$PHP_VERSION
+PHP_TARBALL=$PHP_SODIUM_DIR.tgz
+PHP_TARBALL_URL=https://pecl.php.net/get/$PHP_TARBALL
+
+indent() {
+  sed -u "s/^/       /"
+}
+
+if [ ! -d $CACHE_PATH/$SODIUM_DIR ];
+then
+  cd $CACHE_PATH
+
+  echo -n "-----> Fetching libsodium... "
+  curl --silent --remote-name --insecure --location $TARBALL_URL
+  tar -xf $TARBALL
+  rm $TARBALL
+  echo "done"
+
+  echo -n "-----> Configuring libsodium... "
+  cd $SODIUM_DIR
+  ./configure --silent --disable-debug --disable-dependency-tracking
+  echo "done"
+
+  echo -n "-----> Compiling libsodium... "
+  make &> /dev/null
+  echo "done"
+fi
+
+echo -n "-----> Copying libsodium ($VERSION)... "
+mkdir -p $INSTALL_DIR/include
+mkdir -p $INSTALL_DIR/lib
+cp -rf $CACHE_PATH/$SODIUM_DIR/src/libsodium/.libs/* $INSTALL_DIR/lib
+cp -rf $CACHE_PATH/$SODIUM_DIR/src/libsodium/include/* $INSTALL_DIR/include
+echo "done"
+
+
+if [ ! -d $CACHE_PATH/$PHP_SODIUM_DIR ];
+then
+  cd $CACHE_PATH
+
+  echo -n "-----> Fetching libsodium-php... "
+  curl --silent --remote-name --insecure --location $PHP_TARBALL_URL
+  tar -xf $PHP_TARBALL
+  rm $PHP_TARBALL
+  echo "done"
+
+  echo -n "-----> Configuring libsodium-php... "
+  cd $PHP_SODIUM_DIR
+
+  /app/.heroku/php/bin/phpize &> /dev/null
+  ./configure --silent --with-libsodium=$INSTALL_DIR --with-php-config=/app/.heroku/php/bin/php-config &> /dev/null
+  echo "done"
+
+  echo -n "-----> Compiling libsodium-php... "
+  make &> /dev/null
+  echo "done"
+fi
+
+echo -n "-----> Installing libsodium-php ($PHP_VERSION)... "
+cd $CACHE_PATH/$PHP_SODIUM_DIR
+make install &> /dev/null
+echo "extension=libsodium.so" >> $HOME/.heroku/php/etc/php/php.ini
+echo "done"
